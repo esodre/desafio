@@ -2,59 +2,47 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
 class ProductController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): AnonymousResourceCollection
     {
-        $products = Product::all();
+        $products = Product::with('category')
+            ->when(request('name'), fn($query) => $query->where('name', 'like', '%' . request('name') . '%'))
+            ->get();
 
-        return response()->json($products);
+        return ProductResource::collection($products);
     }
 
-    public function store(): JsonResponse
+    public function store(StoreProductRequest $request): ProductResource
     {
-        $product = Product::query()->create([
-            'name' => request('name'),
-            'price' => request('price'),
-            'category_id' => request('category_id'),
-        ]);
+        $product = Product::query()->create($request->validated());
 
-        return response()->json($product);
+        return new ProductResource($product);
     }
 
-    public function update(Product $product): JsonResponse
+    public function update(Product $product, StoreProductRequest $request): ProductResource
     {
-        $product->update([
-            'name' => request('name'),
-            'price' => request('price'),
-            'category_id' => request('category_id'),
-        ]);
+        $product->update($request->validated());
 
-        return response()->json($product);
+        return new ProductResource($product);
     }
 
-    public function show(Product $product): JsonResponse
+    public function show(Product $product): ProductResource
     {
-        return response()->json($product);
+        return new ProductResource($product);
     }
 
-    public function destroy(Product $product): JsonResponse
+    public function destroy(Product $product): Response
     {
         $product->delete();
 
-        return response()->json(['message' => 'Product deleted']);
-    }
-
-    public function search(): JsonResponse
-    {
-        $products = Product::query()
-            ->where('name', 'like', '%' . request('name') . '%')
-            ->get();
-
-        return response()->json($products);
+        return response()->noContent();
     }
 }

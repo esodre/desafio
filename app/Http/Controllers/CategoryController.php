@@ -2,47 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
 
 class CategoryController extends Controller
 {
 
-    public function index(): JsonResponse
+    public function index(): AnonymousResourceCollection
     {
-        $categories = Category::all();
-
-        return response()->json($categories);
+        return CategoryResource::collection(Category::all());
     }
 
-    public function store(): JsonResponse
+    public function show(Category $category): CategoryResource
     {
-        $category = Category::query()->create([
-            'name' => request('name'),
-        ]);
+        return new CategoryResource($category);
+    }
+
+    public function store(StoreCategoryRequest $request): CategoryResource
+    {
+        $category = Category::query()->create($request->validated());
+
+        return new CategoryResource($category);
+    }
+
+    public function update(Category $category, StoreCategoryRequest $request): JsonResponse
+    {
+        $category->update($request->validated());
 
         return response()->json($category);
     }
 
-    public function update(Category $category): JsonResponse
-    {
-        $category->update([
-            'name' => request('name'),
-        ]);
-
-        return response()->json($category);
-    }
-
-    public function show(Category $category): JsonResponse
-    {
-        return response()->json($category);
-    }
-
-    public function destroy(Category $category): JsonResponse
+    public function destroy(Category $category): \Illuminate\Http\Response
     {
         $category->delete();
 
-        return response()->json(['message' => 'Category deleted']);
+        return response()->noContent();
     }
 }

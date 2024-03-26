@@ -2,52 +2,45 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreClientRequest;
+use App\Http\Resources\ClientResource;
 use App\Models\Client;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
 class ClientController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): AnonymousResourceCollection
     {
-       $clients = Client::all();
+       $clients = Client::with(['orders'])->get();
 
-       return response()->json($clients);
+       return ClientResource::collection($clients);
     }
 
-    public function show(Client $client): JsonResponse
+    public function show(Client $client): ClientResource
     {
-        return response()->json($client);
+        return ClientResource::make($client);
     }
 
-    public function store(): JsonResponse
+    public function store(StoreClientRequest $request): ClientResource
     {
-        $client = Client::query()->create([
-            'name' => request('name'),
-            'email' => request('email'),
-            'phone' => request('phone'),
-            'address' => request('address'),
-        ]);
+        $client = Client::query()->create($request->validated());
 
-        return response()->json($client);
+        return ClientResource::make($client);
     }
 
-    public function update(Client $client): JsonResponse
+    public function update(StoreClientRequest $request, Client $client): ClientResource
     {
-        $client->update([
-            'name' => request('name'),
-            'email' => request('email'),
-            'phone' => request('phone'),
-            'address' => request('address'),
-        ]);
+        $client->update($request->validated());
 
-        return response()->json($client);
+        return ClientResource::make($client);
     }
 
-    public function destroy(Client $client): JsonResponse
+    public function destroy(Client $client): Response
     {
         $client->delete();
 
-        return response()->json(['message' => 'Client deleted']);
+        return response()->noContent();
     }
 }

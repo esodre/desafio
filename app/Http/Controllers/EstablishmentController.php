@@ -2,47 +2,44 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreEstablishmentRequest;
+use App\Http\Resources\EstablishmentResource;
 use App\Models\Establishment;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
 class EstablishmentController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): AnonymousResourceCollection
     {
-        $establishments = Establishment::all();
+        $establishments = Establishment::with(['category', 'product'])->get();
 
-        return response()->json($establishments);
+        return EstablishmentResource::collection($establishments);
     }
 
-    public function show(Establishment $establishment): JsonResponse
+    public function show(Establishment $establishment): AnonymousResourceCollection
     {
-        return response()->json($establishment);
+        return EstablishmentResource::collection($establishment);
     }
-    public function store(): JsonResponse
+    public function store(StoreEstablishmentRequest $request)
     {
-        $establishment = Establishment::query()->create([
-            'name' => request('name'),
-            'category_id' => request('category_id'),
-        ]);
+        Establishment::query()->create($request->validated());
 
-        return response()->json($establishment);
+        return new EstablishmentResource::($establishment);
     }
 
-    public function update(Establishment $establishment): JsonResponse
+    public function update(StoreEstablishmentRequest $request, Establishment $establishment): EstablishmentResource
     {
-        $establishment->update([
-            'name' => request('name'),
-            'category_id' => request('category_id'),
-        ]);
+        $establishment->update($request->validated());
 
-        return response()->json($establishment);
+        return EstablishmentResource::make($establishment);
     }
 
-    public function destroy(Establishment $establishment): JsonResponse
+    public function destroy(Establishment $establishment): Response
     {
         $establishment->delete();
 
-        return response()->json(['message' => 'Establishment deleted']);
+        return response()->noContent();
     }
 }
