@@ -14,7 +14,7 @@ class CategoryController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        return CategoryResource::collection(Category::all());
+        return CategoryResource::collection(Category::query()->where('parent_id', 0)->get());
     }
 
     public function show(Category $category): CategoryResource
@@ -29,11 +29,11 @@ class CategoryController extends Controller
         return new CategoryResource($category);
     }
 
-    public function update(Category $category, StoreCategoryRequest $request): JsonResponse
+    public function update(Category $category, StoreCategoryRequest $request): CategoryResource
     {
         $category->update($request->validated());
 
-        return response()->json($category);
+        return CategoryResource::make($category);
     }
 
     public function destroy(Category $category): \Illuminate\Http\Response
