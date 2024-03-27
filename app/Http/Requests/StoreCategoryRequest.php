@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CategoryType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCategoryRequest extends FormRequest
 {
@@ -15,7 +17,7 @@ class StoreCategoryRequest extends FormRequest
     {
         return [
             'name' => 'nullable|string|max:255',
-            'parent_id' => 'nullable|numeric|exists:categories,id',
+            'type' => Rule::enum(CategoryType::class)->only([CategoryType::ESTABLISHMENT, CategoryType::PRODUCT]),
         ];
     }
 }

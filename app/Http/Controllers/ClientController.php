@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Resources\ClientResource;
 use App\Models\Client;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
@@ -23,24 +25,36 @@ class ClientController extends Controller
         return ClientResource::make($client);
     }
 
-    public function store(StoreClientRequest $request): ClientResource
+    public function store(StoreClientRequest $request): ClientResource | JsonResponse
     {
-        $client = Client::query()->create($request->validated());
+        try {
+            $client = Client::query()->create($request->validated());
 
-        return ClientResource::make($client);
+            return ClientResource::make($client);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()]);
+        }
     }
 
-    public function update(StoreClientRequest $request, Client $client): ClientResource
+    public function update(StoreClientRequest $request, Client $client): ClientResource | JsonResponse
     {
-        $client->update($request->validated());
+        try {
+            $client->update($request->validated());
 
-        return ClientResource::make($client);
+            return ClientResource::make($client);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()]);
+        }
     }
 
-    public function destroy(Client $client): Response
+    public function destroy(Client $client): Response | JsonResponse
     {
-        $client->delete();
+        try {
+            $client->delete();
 
-        return response()->noContent();
+            return response()->noContent();
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()]);
+        }
     }
 }

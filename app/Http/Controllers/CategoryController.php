@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CategoryType;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
 class CategoryController extends Controller
@@ -14,7 +17,7 @@ class CategoryController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        return CategoryResource::collection(Category::query()->where('parent_id', 0)->get());
+        return CategoryResource::collection(Category::query()->whereIn('type', [CategoryType::ESTABLISHMENT, CategoryType::PRODUCT])->get());
     }
 
     public function show(Category $category): CategoryResource
@@ -22,24 +25,37 @@ class CategoryController extends Controller
         return new CategoryResource($category);
     }
 
-    public function store(StoreCategoryRequest $request): CategoryResource
+    public function store(StoreCategoryRequest $request): CategoryResource | JsonResponse
     {
-        $category = Category::query()->create($request->validated());
+        try {
+            $category = Category::query()->create($request->validated());
 
-        return new CategoryResource($category);
+            return CategoryResource::make($category);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()]);
+        }
     }
 
-    public function update(Category $category, StoreCategoryRequest $request): CategoryResource
+    public function update(Category $category, StoreCategoryRequest $request): CategoryResource | JsonResponse
     {
-        $category->update($request->validated());
+        try {
+            $category->update($request->validated());
 
-        return CategoryResource::make($category);
+            return new CategoryResource($category);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()]);
+
+        }
     }
 
-    public function destroy(Category $category): \Illuminate\Http\Response
+    public function destroy(Category $category): Response | JsonResponse
     {
-        $category->delete();
+        try {
+            $category->delete();
 
-        return response()->noContent();
+            return response()->noContent();
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()]);
+        }
     }
 }

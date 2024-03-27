@@ -1,7 +1,9 @@
 <?php
 
 namespace App\Http\Requests;
+use App\Enums\CategoryType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 
 class StoreProductRequest extends FormRequest
@@ -16,7 +18,9 @@ class StoreProductRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'price' => 'required|integer',
-            'category_id' => 'required|integer|exists:categories,id',
+            'description' => 'nullable|string',
+            'category_id' => ['required', 'integer',
+                Rule::exists('categories', 'id')->where('type', CategoryType::PRODUCT)],
         ];
     }
 }
